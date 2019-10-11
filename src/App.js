@@ -1,26 +1,61 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { CssBaseline, Container } from '@material-ui/core'
 import TextField from '@material-ui/core/TextField'
+import TasksList from './components/TasksList'
 
-class App extends React.Component {
+class App extends Component {
 	state = {
 		task: '',
-		todo: []
+		todo: [],
+		otraCosa: {},
+		otraMas: ''
 	}
 
-	fieldHandler(e) {
+	fieldHandler = (e) => {
 		this.setState({ task: e.target.value })
 	}
 
-	enterHandler(e) {
+	enterHandler = (e) => {
 		if (e.key === 'Enter') {
-			let value = this.state[e.target.name]
-			let newTodo = [ ...this.state.todo, value ]
-			this.setState({ task: '', todo: newTodo })
+			this.saveTask(e.target.name)
 		}
 	}
 
+	saveTask = (field) => {
+		let value = this.state[field]
+		let id = this.state.todo.length + 1
+		let newTodo = [ ...this.state.todo, { id: id, text: value, status: 'pending' } ]
+		this.setState({ [field]: '', todo: newTodo })
+	}
+
+	changeStatus = (id) => {
+		let newTodo = [ ...this.state.todo ]
+		let task = newTodo.find((e) => e.id === id)
+		task.status = task.status === 'pending' ? 'completed' : 'pending'
+		this.setState({ todo: newTodo })
+	}
+
+	deleteTask = (id) => {
+		let newTodo = [ ...this.state.todo ]
+		let task = newTodo.find((e) => e.id === id)
+		newTodo.splice(newTodo.indexOf(task), 1)
+		this.setState({ todo: newTodo })
+	}
+
+	componentDidMount = () => {
+		const persistedState = window.localStorage.getItem('todo-state')
+		this.setState({ ...(JSON.parse(persistedState) || { todo: [], otraCosa: {} }) })
+	}
+
+	componentDidUpdate() {
+		let { todo, otraCosa } = this.state
+		let persisted = { todo, otraCosa }
+		window.localStorage.setItem('todo-state', JSON.stringify(persisted))
+	}
+
 	render() {
+		const completed = [ ...this.state.todo.filter((e) => e.status === 'completed') ]
+		const pending = [ ...this.state.todo.filter((e) => e.status === 'pending') ]
 		return (
 			<Container>
 				<CssBaseline />
@@ -32,6 +67,20 @@ class App extends React.Component {
 					onChange={(e) => this.fieldHandler(e)}
 					onKeyPress={(e) => this.enterHandler(e)}
 					variant="outlined"
+				/>
+				<TasksList
+					title={'pendientes'}
+					tag={'( )'}
+					data={pending}
+					changeStatus={this.changeStatus}
+					deleteTask={this.deleteTask}
+				/>
+				<TasksList
+					title={'completadas'}
+					tag={'(x)'}
+					data={completed}
+					changeStatus={this.changeStatus}
+					deleteTask={this.deleteTask}
 				/>
 			</Container>
 		)
