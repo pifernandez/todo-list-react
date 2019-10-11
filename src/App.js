@@ -24,7 +24,7 @@ class App extends React.Component {
 		return (
 			<Container>
 				<CssBaseline />
-				<h1>Todo</h1>
+				<h1>.</h1>
 				<TextField
 					value={this.state.task}
 					label={'Ingrese tarea'}
